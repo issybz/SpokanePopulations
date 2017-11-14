@@ -1,0 +1,166 @@
+---
+title: "SpokaneForeignBorn"
+author: "Issy Belzil & Mikaela Murgoitio"
+date: '2017-11-02'
+output: html_document
+---
+
+In studying the population of Spokane, we looked at five variables: Age, Education, Race, Income and Employment Status to better understand the demographic.  
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+library(htmlwidgets) 
+library(dplyr)
+library(tidyr)
+library(DT)
+library(d3heatmap)
+library(plotly)
+library(readxl)
+library(streamgraph)
+library(pairsD3)
+library(parcoords)
+library(taucharts)
+library(ggplot2)
+```
+
+```{r}
+library(readxl)
+
+```
+
+
+#Age 
+```{r}
+Age <- read_excel("~/Documents/2DataViz /SpokanePopulations/Age.xlsx")
+View(Age)
+```
+
+Gather Age 
+
+```{r}
+
+Agegathered <- gather(Age, "Origin", "Percent", 3:6)
+
+```
+
+
+```{r figure 1, fig.height = 6, fig.width = 10}
+
+AgesFun=ggplot(Agegathered,aes(x=Ages,y=Percent,color=Origin))+geom_point() + labs(list(title = "Spokane Populations", x = "Age Groups", y = "Percent")) 
+AgesFun
+
+```
+
+
+#####Analysis
+
+From this graph, we can see that the highest populations in Spokane are those in the age range 25-44 years old. From that age range, Foreign born-non U.S. citizens is almost 50% of the group. Interestingly, in the next range, ages 45-54, all four different orgins are almost completely equal at approxiametely 15% of the population. For the under 5 range, Native born occupants wins out in Spokane. From ages 55- 85+ years of age, the highest percentage of people are Foreign born, naturalized. This suggests many people want to retire in Spokane that are not US citizens. This could be useful data for marketers who are looking at senior citizens as their classified demographic. 
+
+
+#Education 
+```{r}
+Education <- read_excel("~/Documents/2DataViz /SpokanePopulations/Education.xlsx")
+View(Education)
+
+Educationgathered <- gather(Education, "Origin", "Percent", 3:6)
+
+```
+
+```{r}
+
+Educationplot = parcoords(data= Educationgathered, rownames =F,
+     reorderable = T
+    , queue = T
+    , color = list( colorBy = "Level.of.Education"
+      ,colorScale = htmlwidgets::JS("d3.scale.category10()")
+    )    
+  , brushMode = "1D-axes-multi" )
+
+Educationplot
+
+saveWidget(Educationplot,file = "Education.html", selfcontained = TRUE)
+
+
+```
+
+#####Analysis
+
+This graph tells us that most people in Spokane's population have some college or an associate degree. Out of those who have some college or an associate degree, most of those are native from Spokane. Approxiametely 10% of Native Spokane population have a graduate or professional degree. Whereas Spokane's population of Foreign born inhabitants take the majority of those with a graduate or professional degree. Foreign born, foreign born not US citizen and Foreign born naturalized citizens all have about a 12.5 percentage of people with a graduate or professional degree. Out of the four different types of origins of people, each grouping of people usually have at at least a 25% high school graduation rate. With foreign born, not US citizens having the largest high school graduation rate. 
+
+
+#Race
+
+
+```{r}
+
+Race <- read_excel("~/Documents/2DataViz /SpokanePopulations/Race.xlsx")
+View(Race)
+Race$Race=as.factor(Race$Race)
+
+Racegathered <- gather(Race, "Origin", "Percent", 3:6)
+View(Racegathered)
+
+```
+
+
+```{r}
+
+Racebartauplot=tauchart(Racegathered)%>%tau_bar("Race","Percent", color="Origin")%>% 
+  tau_tooltip(c("Percent", "Origin"))%>% tau_legend()
+Racebartauplot
+
+```
+
+#####Analysis
+
+This graph shows us that the majority of people surveyed in the Spokane population are White, and 91% of those who are White are Native to Spokane. There are almost no people who are American Indian or Alaskan Native who are foreign born, which is not surprising. After White as the largest ethnic group in Spokane, the next largest group is Asian. In the Asian demographic less than one percent is Native to Spokane. 25% of Spokane's Asian population is foreign born, suggesting that many Asian's have moved to Spokane from other parts of the USA. There are almost no Hawaiian or Pacific Islander's who live in Spokane, which can be explained by the drastic change in climate. Most of the Hispanics that live in Spokane are foreign born and not US citizens, which is interesting given the current political climate and the difficulty for this population to get citizenship. There is a low population of Black people that live in Spokane, and most are Foreign born. This might be correlated to the intake of refugees in Spokane. 
+
+
+#Employment 
+
+## Import Employment Status dataset
+```{r}
+EmploymentStatus <- read_excel("~/Documents/2DataViz /SpokanePopulations/EmploymentStatus.xlsx", col_types = c("text", "numeric", "numeric", "numeric", "numeric", "numeric"))
+colnames(EmploymentStatus)[1] = "Employment.Status"
+View(EmploymentStatus)
+```
+## Create a Sunburst for Employment Status:
+```{r}
+library(sunburstR)
+myburst=sunburst(EmploymentStatus)
+myburst
+```
+Based off this analysis, we can see that the majority of people observed in Spokane are currently employed (55.1%). The second largest chunk of people are not currently in the labor force (39.2%). 5.10% are unemployed and .6% are in the armed forces. From this graph, we can conclude that the majority of the population is in fact employed. A very small amount of the Spokane residents are involved in the armed forces.Finally, only about 5% are currently unemployed and therefore by definition are searching for employment or are between jobs. 
+
+
+#Earnings
+
+##Import Earnings in Past Year dataset
+```{r}
+EarningsPastYear <- read_excel("~/Documents/2DataViz /SpokanePopulations/EarningsPastYear.xlsx", col_types = c("text", "numeric", "numeric", "numeric", "numeric", "numeric"))
+colnames(EarningsPastYear)[1] = "Earnings.Range"
+View(EarningsPastYear)
+
+##Gather Data
+Earningsgathered <- gather(EarningsPastYear, "Origin", "Percent", 3:6)
+View(Earningsgathered)
+```
+##Create Highcharter for Earnings Per Year:
+```{r}
+library(highcharter)
+hicharteriris=hchart(Earningsgathered,"line",hcaes(x=Earnings.Range,y=Percent,group= Origin)) %>% hc_title(text = "Comparing Earnings Per Year to Origin of Birth",
+           style = list(fontWeight = "bold"))
+
+##Display Chart
+hicharteriris
+```
+Based off of this chart, we can note a few very important observations. First, Native born citizens have a positive correlation up until the 75,000 or higher earnings per year range. The majority of people in this origin make 35,000 to 74,999 dollars per year. Foreign born non-US citizens contains 25% of their population in the 15,000 range yet 17% in the 75,000 or higher range. This indicates there is a significant gap in this population with less than 1% in the 50,000 - 74,999 dollar earnings per year range. Foreign born citizens and foreign born naturalized have very similar correlations as far as earnings per year. Foreign born citizens have slightly higher percentages in the 15,000 - 24,999 and 25,000 - 34,999 range, but take a dip in the 50,000 to 74,999 range. 
+The group with the highest overall earnings is the native population. Foreign born non-US citizens make up most of the lower earnings per year percentages and are the lowest origin group to earn over 35,000 per year. 
+
+
+
+
